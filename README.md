@@ -33,4 +33,13 @@ Per the build-priority rankings in files 01, 02, and 05, the highest edge-per-ef
 3. **Second strategy:** EDGAR filing signals (13D stakes, insider buying clusters) — near-free data, ~1-second latency achievable, drift horizon of weeks.
 4. **Paper trade first** on Alpaca, with kill switches and per-event position caps from day one.
 
-*Compiled 2026-06-11. All numbers are from the cited academic papers and practitioner sources inside each file — treat them as historical estimates, not promises.*
+## Scope and disclaimer
+
+This is a literature review, not a trading system and not advice. Every number
+comes from the academic paper or practitioner source cited inside the file it
+appears in; they are historical estimates from specific samples and periods,
+not expected returns. Point 5 above is the important one: published edges decay
+once they are published, and several of the ones documented here already have.
+No code, no backtest results of my own, and nothing here has been traded.
+
+*Compiled 2026-06-11.*

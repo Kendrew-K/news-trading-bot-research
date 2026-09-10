@@ -1,13 +1,32 @@
-# Video Plans — Trading Series (4 Research Reels)
+# Video Plans — Trading Series (all reels, research + build)
 
-These 4 videos are the RESEARCH SECTION — presenting the techniques Wall Street uses to find edge.
-Weighted toward **modern (post-2000s) techniques**, but incorporating the classic edges where they still matter.
-After these, separate videos will pick the best techniques and explain each in detail.
+**Videos 1–4 = research phase** — the techniques Wall Street uses to find edge. Weighted toward
+**modern (post-2000s)**, but keeping the classic edges where they still matter.
+**Videos 5–6 = pivot** — which techniques got picked, and the pipeline on a whiteboard.
+**Videos 7+ = build phase** — one pipeline stage per video, code included. These are the "Build reel"
+folders in `Trading Videos/`; day numbers (Day 8, Day 9, …) are the on-camera series counter.
 
-Style: bilingual EN/ID, personal journey, hook → explain techniques → CTA teasing the next phase.
+Style: bilingual EN/ID, personal journey, hook → explain → CTA teasing the next phase.
 Format: 60–90s Reels. Casual "lo/gua" Indonesian.
 
-**Arc:** event-driven drift (timeless) → alternative data (modern) → machine learning & quant (modern) → AI reads the news (modern frontier).
+**Arc:** event-driven drift (timeless) → alternative data (modern) → machine learning & quant (modern)
+→ AI reads the news (modern frontier) → what I picked → the pipeline → building each stage for real.
+
+**Where each video lives**
+
+| # | Day | Title (short) | Folder | State |
+|---|---|---|---|---|
+| 1–4 | — | Research reels | `Trading Videos/Research reel 1–4` | shipped |
+| 5 | Day 6 | What I'm building / killed 90% | `Trading Videos/Build reel 1` | shipped |
+| 6 | Day 7 | The 5-stage pipeline | `Trading Videos/Build Reel 2` | shipped |
+| 7 | Day 8 | Reading the news for free (ingestion) | `Trading Videos/Build Reel 3` | script only, no footage |
+| 8 | Day 9 | Dedup + novelty | `Trading Videos/Build Reel 4` | script only, no footage |
+| 9 | Day 10 | Ticker mapping | `Trading Videos/Build Reel 5` | script only, no footage |
+| 10 | Day 11 | Signal rules before AI | `Trading Videos/Build Reel 6` | script only, no footage |
+| 11+ | — | Risk gate + kill switch, then honest backtesting | not written yet | — |
+
+Videos 7–10 below are the full shooting scripts. Each reel folder also holds the same script as
+`SCRIPT.md` plus its edit-time detail (overlay slot names, ProRes/subtitle checklist).
 
 ---
 
@@ -235,55 +254,295 @@ The reel only covers 4 of the 6 techniques above (PEAD, Analyst Revision, Merger
 ## Video 6 — "Building the Bot: Data In, Trade Out, Nothing Blows Up"
 *Covers: the 5-stage pipeline, dedup/novelty filtering, rules-before-ML signal design, the risk gate and kill switches, the 4-month build path*
 
-**Core idea:** A news bot isn't one script — it's five stages that each fail in their own specific way if you skip them. This video walks the actual architecture, and the guardrails that stop a bug from becoming a blown account.
+**Core idea:** A news bot isn't one script — it's 5 steps in a row, like a factory line. Skip any step and there's a specific way you lose money. This video walks the 5 steps and the "emergency brakes" that stop a bug from wiping the account.
 
 **Hook (0–5s)**
-> "Bot trading itu bukan satu script — ada 5 tahap, dan tiap tahap punya cara gagalnya sendiri kalau lo skip."
+> "Bot trading itu bukan satu script — ada 5 langkah, dan tiap langkah lo skip, ada cara spesifik lo rugi."
 
 **Explain (5–75s)**
 
-**1. The Pipeline (12s)**
-- Ingestion → Dedup/Novelty → Ticker mapping → Signal → Risk gate → Execution → Logging. Every stage exists because skipping it caused someone real losses.
-- *"Ini bukan over-engineering — tiap kotak ini ada karena ada cara spesifik buat rugi kalau nggak ada."*
+**1. The 5 Steps (12s)**
+- Simple chain: **baca berita → buang berita duplikat → cari saham yang kena → putusin buy/sell → cek aman dulu → baru eksekusi** (semua dicatat).
+- Every step exists because someone lost real money without it.
+- *"Ini bukan ribet-ribetan — tiap kotak ada karena ada cara spesifik buat rugi kalau nggak ada."*
 - 📄 Source: `Research/05-...md` §4
 
-**2. Dedup & Novelty — the same story hits 5–50 times (12s)**
-- Wire → aggregators → rewrites all republish the same news. Without novelty filtering, the bot "reacts" to the same event repeatedly.
-- Fresh news → trend continues. Stale (recycled) news → often reverses. Confusing the two is a direct P&L bug.
+**2. Duplicate News Filter — same story shows up 5–50 times (12s)**
+- One event gets republished everywhere: original wire, aggregators, rewrites. Without a filter, the bot thinks "new news!" 50 times and trades the same event over and over.
+- Simple rule: **news that's truly new → price keeps moving. News that's recycled → price often reverses.** Mix them up and you lose money directly.
 - *"Kalau semua orang udah tau, itu bukan sinyal baru — itu jebakan."*
 - 📄 Source: `Research/04-...md`; Tetlock (2011) fresh-vs-stale
 
-**3. Rules Before ML (12s)**
-- Start with high-precision, auditable rules — "8-K merger agreement + small cap" — before any ML or LLM layer. Most professional event desks are rules-heavy for exactly this reason: you can explain every trade.
+**3. Simple Rules First, AI Later (12s)**
+- Start with dumb-but-clear if-then rules, e.g. "IF merger announcement AND small company → buy." No AI yet.
+- Why: you can explain every single trade. Pro trading desks work the same way — rules first.
 - *"Kalau gua nggak bisa jelasin kenapa bot-nya trade, gua nggak percaya bot-nya."*
 - 📄 Source: `Research/05-...md` §4.4
 
-**4. The Risk Gate & Kill Switches (14s)**
-- Every order passes a synchronous check first: position size caps, daily loss limit, halt detection, duplicate-order suppression. This is the same standard regulators force on broker-dealers (SEC Rule 15c3-5) — replicated client-side.
-- Automatic flatten-and-halt on loss breach, plus a one-command manual kill. Tested in paper before it's trusted live.
+**4. The Safety Check & Kill Switch (14s)**
+- Before ANY order goes out, bot checks: position not too big? daily loss limit not hit? stock not halted? not a duplicate order? Fail any check → order blocked.
+- (Big brokers are legally forced to do this — SEC rule. We copy it ourselves.)
+- If daily loss limit hit → bot sells everything and stops itself. Plus one command to kill it manually. All tested with fake money first.
 - *"Bukan kalau bot-nya salah — tapi KAPAN. Kill switch nentuin seberapa mahal itu."*
 - 📄 Source: `Research/05-...md` §6; SEC 15c3-5
 
-**5. The Build Path (13s)**
-- Weeks 1–2: ingestion + archive (Alpaca free news websocket + EDGAR poller). Weeks 3–4: dedup + rules. Month 2: LLM layer + risk gate. Months 2–4: honest evaluation against the archive. Month 4+: tiny live capital, only on what survived paper.
-- Total starter cost: $0–100/month — the pro stack (Bloomberg/RavenPack) is $100k+/year for speed a solo bot can't use anyway.
+**5. The 4-Month Plan (13s)**
+- Month 1: collect news + save it (free sources). Month 2: duplicate filter + rules + safety check, add AI layer. Months 2–4: test against saved news history — honestly. Month 4+: small real money, only for rules that survived testing.
+- Cost: $0–100/month. Pro tools (Bloomberg) are $100k+/year — for speed a solo bot can't use anyway.
 - *"Gua nggak buru-buru ke duit beneran. Tiap tahap harus lolos dulu sebelum naik level."*
 - 📄 Source: `Research/05-...md` §8
 
 **CTA (75–88s)**
-> "Itu rencana lengkapnya — dari mana datanya, gimana filternya, dan kapan gua berhenti kalau salah. Video selanjutnya gua mulai build beneran, mulai dari ingestion layer-nya. Follow biar bisa liat progress-nya."
+> "Itu rencana lengkapnya — dari mana datanya, gimana filternya, dan kapan gua berhenti kalau salah. Video selanjutnya gua mulai build beneran, mulai dari langkah pertama: baca berita. Follow biar bisa liat progress-nya."
+
+---
+
+# BUILD PHASE — one pipeline stage per video
+
+Pipeline: `[Ingestion] → [Dedup/Novelty] → [Ticker mapping] → [Signal] → [Risk gate] → [Execution] → [Logging]`
+(`Research/05-...md` §4). Video 7 = stage 1, video 8 = stage 2, and so on.
+
+**Build-phase rules (differ from research reels):**
+- **NO citation panels** — these are own-build-plan reels, top-band graphics + intro sign only (EDITING_GUIDE §10.6).
+- Full viral pass every reel (EDITING_GUIDE §10): cold-open hook, jump-cut silences, punch alternation, SFX layer, hybrid meme layer.
+- New intro-sign theme per episode (§5.5), landing on the spoken "Day N".
+- Runtime 55–75s. Bilingual `.ass` subs, white ID top / yellow EN bottom.
+
+---
+
+## Video 7 — "Building the Bot for Real, Step 1: Reading the News (for Free)" · Day 8
+*Covers: free news sources, websocket vs polling, normalize + store everything, why Month 1 has no trading*
+**Folder:** `Trading Videos/Build Reel 3` · **Pipeline stage:** ingestion (`Research/05-...md` §2, §4.1)
+
+**Core idea:** The pivot from planning to building. Day 7 promised "gua mulai build beneran, mulai dari
+langkah pertama: baca berita." This delivers the ingestion layer — the whole Month 1 of the roadmap.
+
+**Hook (0–5s)** — cold open, biggest lever
+> "Bloomberg's news feed is a hundred thousand dollars a year. Gua bikin yang sama, buat bot gua, pake nol rupiah. Ini caranya."
+
+*(payoff word: "nol rupiah" — hook overlay + cash-register/vine-boom SFX)*
+
+**Intro / DAY 8 sign (~5–8s)**
+> "Day 8. Kemarin gua gambar pipeline-nya di whiteboard. Hari ini kita mulai ngoding — langkah pertama: baca berita."
+
+**Explain**
+
+**1. The free backbone (14s)**
+- Lo nggak butuh Bloomberg. Dua sumber gratis yang cukup buat mulai: **Alpaca News API** (isinya feed Benzinga — sama yang dipake trader pro — lewat websocket, gratis di akun paper), dan **SEC EDGAR** (tiap 8-K, 13D, Form 4 keluar sub-detik dari sumbernya, gratis, tinggal declare User-Agent, limit 10 request/detik).
+- *"Berita yang gerakin saham kecil sering telat diliput manusia. Di situ edge-nya, dan datanya gratis."*
+- Money contrast for the meme layer: Bloomberg B-PIPE ~$2,000/bln → Alpaca websocket $0.
+- 📄 Source: `Research/05-...md` §2.2, §2.3
+
+**2. Websocket beats polling (12s)**
+- Dua cara ambil berita: **polling** (nanya server tiap X detik, "ada yang baru?") atau **websocket** (satu koneksi nyala terus, server yang dorong berita ke lo detik itu juga).
+- Websocket menang: latency paling rendah yang bisa diraih retail, satu koneksi. Yang perlu diurus cuma reconnect kalau putus.
+- *"Jangan nanya terus-terusan. Buka satu pintu, biar beritanya yang dateng ke lo."*
+- 📄 Source: `Research/05-...md` §4.1
+
+**3. Normalize + store everything (13s)**
+- Tiap sumber formatnya beda. Ubah semua ke satu bentuk: `{source, published_at, headline, tickers, hash}`.
+- Simpan **semua** mentah-mentahan, append-only, di SQLite. Belum di-trade — ini bahan buat backtest point-in-time nanti.
+- *"Aturan nomor satu: simpen semua beritanya. Data yang lo buang hari ini, itu yang lo butuhin buat tes bulan depan."*
+- 📄 Source: `Research/05-...md` §4.1, §5.2
+
+**4. This is Month 1 (8s)**
+- Nggak ada trading di video ini. Bulan pertama cuma: nyambung ke feed, tampung berita, simpen. Titik.
+- *"Belum ada duit yang gerak. Fondasi dulu — kalau ingestion-nya bocor, semua di atasnya ikut bocor."*
+- 📄 Source: `Research/05-...md` §8 step 1
+
+**CTA (~6s)**
+> "Sekarang beritanya masuk semua, tapi satu kejadian bisa muncul 50 kali. Video berikutnya: filter duplikat, biar bot-nya nggak trade berita yang sama berulang-ulang. Follow dulu."
+
+**Edit plan**
+- **Intro sign `slot_pvz_day8`** — terminal boot / news-wire CRT: green-phosphor cursor types `> CONNECTING TO FEED...`, ticker tape wipes across, headline slot resolves to **"DAY 8"** in monospace.
+- **Top band:** `slot_gfx_feeds` (ALPACA + SEC EDGAR pills with green FREE tags, struck-through "BLOOMBERG $100k/yr" card + **NOPE.** stamp) · `slot_gfx_stream` (dim "POLL?" bubbles left vs one green open pipe right) · `slot_gfx_schema` (record types out row by row, raw headlines drop into an append-only **SQLite** box) · `slot_gfx_month1` (5-month timeline, Month 1 "COLLECT + STORE" lit, 2–5 dimmed — reuse `slot_gfx_roadmap` from Build reel 2).
+- **Meme layer:** **STONKS** when $0 beats the $100k feed; **NOPE.** on the Bloomberg price card; damped-wiggle after the hook pill.
+- **SFX:** cash register on "$0" (`money.mp3`, trim ~1.6s) · vine boom on sign land · swoosh on card slides · pop/mario-coin on rows · emotional-damage or womp-womp on NOPE. · ding on Month-1 light-up.
+- **Code angle (b-roll):** `alpaca-py` news websocket subscribe → store each headline; EDGAR latest-filings poll with declared User-Agent (≤10 req/s); normalize both, INSERT append-only into `news.sqlite`. Filming the terminal streaming live headlines is the strong screen-record beat.
+
+---
+
+## Video 8 — "One Story, 50 Times: Stopping the Bot From Trading the Same News Twice" · Day 9
+*Covers: why one event arrives 5–50 times, exact-hash dedup, fuzzy/embedding similarity, novelty vs the story chain*
+**Folder:** `Trading Videos/Build Reel 4` · **Pipeline stage:** dedup / novelty (`Research/05-...md` §4.2)
+
+**Core idea:** The Day 8 archive is full of the same event repeated. Without a filter, the bot reads
+50 signals where a human sees one story.
+
+**Hook (0–5s)**
+> "Satu berita masuk lima puluh kali. Kalau bot gua nggak nyaring, dia beli saham yang sama lima puluh kali, pake duit yang sama. Ini cara nyetopnya."
+
+*(payoff: "lima puluh kali" — hook overlay + rapid-fire pop/stutter stack)*
+
+**Intro / DAY 9 sign (~5–8s)**
+> "Day 9. Kemarin beritanya udah masuk semua ke database. Masalahnya sekarang: isinya duplikat."
+
+**Explain**
+
+**1. The problem (10s)**
+- Satu kejadian, misal 8-K merger, keluar dari wire, di-copy aggregator, ditulis ulang sama 20 situs. Feed lo nerima semuanya sebagai berita "baru".
+- *"Buat manusia jelas itu berita yang sama. Buat bot, itu lima puluh alasan buat beli."*
+- 📄 Source: `Research/05-...md` §4.2
+
+**2. Layer 1 — exact hash (11s)**
+- Normalize dulu: lowercase, buang tanda baca, buang query string di URL. Baru di-`hash`.
+- Hash sama = udah pernah liat = buang. Murah, instan, nangkep semua yang copy-paste persis. Tapi ganti satu kata, hash-nya beda total.
+
+**3. Layer 2 — fuzzy / embedding similarity (12s)**
+- Yang ditulis ulang lolos dari hash. Judulnya beda, artinya sama.
+- MinHash atau sentence embedding + cosine similarity, dalam rolling window per ticker (misal 24 jam terakhir). Di atas threshold = cerita yang sama.
+- *"Layer satu nangkep yang copy-paste. Layer dua nangkep yang parafrase."*
+
+**4. Layer 3 — novelty vs the story chain (13s)**
+- Paling penting, paling sering dilewatin: **informasi baru atau lanjutan?** "Perusahaan X diakuisisi" = baru. "Saham X naik setelah diakuisisi" = follow-up, nol informasi baru, harganya udah gerak.
+- Bandingin sama N berita terakhir untuk ticker itu. Cuma item pertama yang beneran baru yang boleh jadi sinyal.
+- Vendor mahal jual ini namanya "novelty score". Versi gratisnya: simpen chain-nya sendiri.
+- 📄 Source: `Research/05-...md` §4.2 layer 3; fresh-vs-stale from Video 4 (Tetlock 2011)
+
+**5. Why it's a money bug (8s)**
+- Tanpa filter ini: posisi lo jadi 50x lipat dari yang lo mau, ukuran risiko lo bohong, dan lo masuk pas harganya udah abis gerak.
+- *"Bug duplikat itu bukan bug kosmetik. Itu bug yang ngabisin duit."*
+
+**CTA (~6s)**
+> "Sekarang beritanya bersih, satu kejadian satu sinyal. Tapi bot gua masih bingung: 'Apple' itu saham AAPL, atau buah? Video berikutnya: nyocokin berita ke ticker yang bener. Follow dulu."
+
+**Edit plan**
+- **Intro sign `slot_pvz_day9`** — photocopier / echo stack: one headline card duplicates into 2, 8, 30 offset copies with rising shutter-clack, then a filter bar sweeps and collapses the stack to ONE card reading **"DAY 9"**.
+- **Top band:** `slot_gfx_flood` (copies fan out, counter ticks **1 → 50**, fake outlet names) · `slot_gfx_hash` (two identical rows → same `a3f9…` hash, second gets **DUPLICATE** stamp and greys out) · `slot_gfx_fuzzy` (two differently-worded headlines, similarity meter fills to **0.94**, threshold 0.85 turns red) · `slot_gfx_novelty` (story chain: first item green **NEW**, items 2–4 grey **FOLLOW-UP**, only green drops into **SIGNAL**).
+- **Meme layer:** **THE SAME 3 HEADLINES** on the flood counter; **DUPLICATE** / **NOPE.** stamps; damped-wiggle after the hook pill.
+- **SFX:** pop stack / typewriter clatter under the hook vocal · shutter-clack + vine boom on sign land · mario-coin on hash match · womp-womp on DUPLICATE · ding on novelty green light.
+- **Code angle (b-roll):** `hashlib.sha256` on the normalized headline + `INSERT OR IGNORE` on a UNIQUE column; `datasketch` MinHash **or** `sentence-transformers` cosine over a per-ticker 24h window; a `story_chain` table flagging `is_novel` only on the first item. On-screen proof: "1,204 events ingested → 173 unique stories."
+
+---
+
+## Video 9 — "'Apple' or an Apple? Teaching the Bot Which Stock the News Is About" · Day 10
+*Covers: why entity mapping is hard, the security master (ticker ↔ CIK ↔ aliases), validating vendor tags, NER + confidence, the drop rule*
+**Folder:** `Trading Videos/Build Reel 5` · **Pipeline stage:** entity / ticker mapping (`Research/05-...md` §4.3)
+
+**Core idea:** A clean, novel story is still useless until it points at the right ticker — and company
+names are not IDs.
+
+**Hook (0–5s)**
+> "Bot bisa baca berita sempurna, terus beli saham yang salah. Bukan bug di kodenya, bug di namanya. Serius."
+
+*(payoff: "saham yang salah" — hook overlay + record scratch)*
+
+**Intro / DAY 10 sign (~5–8s)**
+> "Day 10. Beritanya udah bersih, nggak ada duplikat. Sekarang: berita ini sebenernya tentang saham yang mana?"
+
+**Explain**
+
+**1. Why it's harder than it looks (13s)**
+- "Apple" bisa perusahaan, bisa buah. "Meta" bisa Facebook, bisa istilah crypto. "Delta" bisa maskapai, bisa varian.
+- Anak perusahaan pake nama induk. ADR punya ticker beda buat perusahaan yang sama. Dan ticker bekas perusahaan yang delisting **dipake ulang** sama perusahaan lain.
+- *"Nama perusahaan itu bukan ID. Bot butuh ID beneran."*
+- 📄 Source: `Research/05-...md` §4.3
+
+**2. The security master (12s)**
+- Satu tabel jadi sumber kebenaran: **ticker ↔ CIK ↔ nama resmi ↔ alias**.
+- CIK itu nomor ID perusahaan di SEC, dan dia nggak pernah ganti walaupun namanya atau tickernya ganti. Itu jangkarnya. Gratis dari EDGAR: `company_tickers.json`.
+- Wajib **point-in-time**: simpen tanggal berlaku, biar berita 2023 dipetain ke perusahaan yang megang ticker itu di 2023, bukan yang sekarang.
+- 📄 Source: `Research/05-...md` §4.3, §5.2
+
+**3. Vendor tags lie (12s)**
+- Feed bagus (Benzinga lewat Alpaca, Polygon) udah ngasih tag ticker sendiri. Pake, tapi **jangan percaya buta** — tagging vendor salah cukup sering, dan di studi pipeline LLM, mapping ticker yang jelek berulang kali jadi titik gagal utama.
+- Validasi: tag vendor harus cocok sama security master. Nggak cocok = jangan trade, tandain buat direview.
+
+**4. NER + confidence for untagged text (12s)**
+- Buat teks tanpa tag (exhibit EDGAR, RSS mentah): NER buat narik nama perusahaan, cocokin ke tabel alias.
+- Kalau pake LLM, suruh output ticker **plus confidence**, JSON ketat. Jangan cuma ticker.
+- *"Modelnya boleh nebak. Yang nggak boleh: nebak diem-diem."*
+- 📄 Source: `Research/05-...md` §4.3, §4.4
+
+**5. The drop rule (8s)**
+- Confidence rendah atau dua kandidat? **Buang beritanya.** Berita yang kelewat itu murah. Trade di ticker yang salah itu mahal.
+
+**CTA (~6s)**
+> "Sekarang tiap berita nyambung ke saham yang bener. Video berikutnya: kapan berita itu jadi sinyal beli — dan kenapa gua pake aturan biasa dulu, bukan AI. Follow dulu."
+
+**Edit plan**
+- **Intro sign `slot_pvz_day10`** — ID badge scanner: headline card slides under a scanner beam, red **UNKNOWN ENTITY** blinks, beam sweeps again, badge stamps out as a ticker-style plate reading **"DAY 10"**.
+- **Top band:** `slot_gfx_ambiguous` (**APPLE** splits to a stock-chart card and a fruit card, "?" pulsing) · `slot_gfx_master` (table builds `AAPL | CIK 0000320193 | Apple Inc. | aliases…`, CIK column tagged **NEVER CHANGES**) · `slot_gfx_validate` (vendor pill checked against master: green **MATCH**, red **MISMATCH → HOLD**) · `slot_gfx_confidence` (`{ticker:"NVDA", confidence:0.91}` PASS, `{ticker:"DAL", confidence:0.42}` **DROPPED**).
+- **Meme layer:** **BOUGHT THE FRUIT.** on the ambiguity card; **MISMATCH** / **DROPPED** stamps; damped-wiggle after the hook pill.
+- **SFX:** record scratch on "saham yang salah" · scanner beep + vine boom on sign land · soft pop per table row (cap the run) · ding on MATCH · buzzer/womp-womp on MISMATCH and DROPPED.
+- **Code angle (b-roll):** load EDGAR `company_tickers.json` into a `security_master` table (ticker, cik, name, aliases, valid_from); resolver = vendor tag → master lookup → mismatch flag, untagged text → `spaCy` NER → alias match; everything unresolved logged to `needs_review`. Filming that review table filling up is honest b-roll.
+
+---
+
+## Video 10 — "Boring Rules Beat the AI: How My Bot Decides a Headline Is Worth a Trade" · Day 11
+*Covers: why LLM-as-oracle fails on auditability, 5–10 high-precision rules, LLM as structured extractor, the materiality/novelty/liquidity gates*
+**Folder:** `Trading Videos/Build Reel 6` · **Pipeline stage:** signal generation (`Research/05-...md` §4.4)
+
+**Core idea:** Clean, novel, correctly-tickered news still isn't a trade. Rules decide — auditable ones —
+and the LLM works below them as an extractor, not an oracle.
+
+**Hook (0–5s)**
+> "Semua orang mau bot-nya pake AI buat mutusin beli. Meja event di Wall Street kebanyakan masih pake if-else. Ada alasannya."
+
+*(payoff: "if-else" — hook overlay + vine boom)*
+
+**Intro / DAY 11 sign (~5–8s)**
+> "Day 11. Beritanya bersih dan udah nyambung ke ticker yang bener. Sekarang: kapan dia jadi sinyal?"
+
+**Explain**
+
+**1. Everyone starts with AI (10s)**
+- Godaannya: lempar tiap headline ke LLM, tanya "beli atau jual". Gampang dibikin, gampang bocor duitnya.
+- Masalahnya bukan pinter atau nggak — masalahnya **nggak bisa diaudit**. Kalau rugi, lo nggak tau alasannya, jadi lo nggak bisa benerin.
+- *"Kalau lo nggak bisa jelasin kenapa bot lo beli, lo nggak punya strategi. Lo punya slot machine."*
+- 📄 Source: `Research/05-...md` §4.4
+
+**2. Rules first (12s)**
+- Aturan itu presisi tinggi, murah, dan tiap keputusan ada jejaknya. Mulai dari 5 sampai 10 aturan aja, bukan seratus.
+- Tiap aturan lahir dari satu jenis kejadian yang emang punya sejarah gerak — itu isi video 1 sampai 4.
+
+**3. What a rule actually looks like (13s)**
+- **8-K item 1.01** + frasa "merger agreement" + small cap + ada premium → kandidat.
+- **Guidance withdrawn / suspended** di rilis earnings → kandidat sisi bawah.
+- **FDA approval keywords** di 8-K biotek → kandidat.
+- Tiap aturan nulis alasannya sendiri ke log: `rule_id`, teks yang match, ticker, timestamp.
+- *"Aturannya boring. Boring itu yang bisa lo tes."*
+- 📄 Source: `Research/01-...md`, `Research/02-...md` for the event types
+
+**4. Where the LLM actually goes (12s)**
+- Tetep dipake, tapi sebagai **extractor**, bukan peramal. Output JSON ketat: `{ticker, event_type, direction, magnitude, confidence, half_life}` — itu bahan buat aturan, bukan pengganti aturan.
+- Pin versi modelnya, log tiap prompt sama jawabannya. Model ganti diem-diem = strategi lo ganti diem-diem.
+- 📄 Source: `Research/05-...md` §4.4; LLM look-ahead caveats §5.3
+
+**5. The three gates (10s)**
+- Sebelum sinyal lanjut: **materiality** (kejadiannya cukup besar), **novelty** (beneran baru, dari filter Day 9), **liquidity** (sahamnya cukup rame buat dimasukin dan dikeluarin). Gagal satu, sinyalnya mati di situ.
+
+**CTA (~6s)**
+> "Sekarang bot gua udah bisa bilang 'ini layak dibeli'. Tapi belum ada satu order pun yang gua biarin keluar. Video berikutnya: risk gate sama kill switch, alias rem daruratnya. Follow dulu."
+
+**Edit plan**
+- **Intro sign `slot_pvz_day11`** — split-flap departure board clacking through `IF … THEN … ELSE …`, all flaps settling at once into **"DAY 11"**. Mechanical and boring on purpose, matches the thesis.
+- **Top band:** `slot_gfx_blackbox` (headline enters a black box labeled **AI**, "BUY" pops out, a **WHY?** bounces off unanswered) · `slot_gfx_rules` (three readable rule cards, each tagged green **AUDITABLE**) · `slot_gfx_json` (extraction schema types out, **FEEDS THE RULES** arrow pointing into a rule card, not an order ticket) · `slot_gfx_gates` (**MATERIALITY → NOVELTY → LIQUIDITY**, token passes two, stopped red at the third).
+- **Meme layer:** **TRUST ME BRO** as the black box's answer to WHY?; red **BLOCKED** stamp at the liquidity gate; damped-wiggle after the hook pill.
+- **SFX:** vine boom on "if-else" · split-flap clatter on sign land (build from a fast pop/typewriter stack if no flap SFX in `Meme Audio/`) · swoosh + pop on rule cards · ding on gate pass · buzzer/emotional-damage on gate block.
+- **Code angle (b-roll):** `rules.py` with 5 predicate functions returning `(fires, rule_id, evidence)`; run them over the Day 8–10 archive and show how few of N stored events actually fire — the low number is the point. Optional LLM extractor returning schema-validated JSON with the model version pinned in the log row. Strong beat: scrolling a `signals` table where every row has a human-readable `evidence` string.
+
+---
+
+## Not written yet (build phase continues)
+
+- **Video 11 — risk gate + kill switch.** Pre-trade checks run synchronously before every order (position size, daily loss, halted/haltable, duplicate-order suppression), automatic flatten-and-halt, one-command manual kill, heartbeat watchdog. Mirrors SEC Rule 15c3-5. LULD halts = why limit orders only. 📄 `Research/05-...md` §4.5, §6
+- **Video 12 — honest backtesting.** Event-study method on your own archive, point-in-time data, and the big one: **LLM look-ahead bias** — feeding 2021 headlines to a 2025-trained model measures memorization, and prompt tricks do NOT fix it. 📄 `Research/05-...md` §5
+- **Video 13 — paper trading for months.** Alpaca paper on the identical API, paper fills as an upper bound, comparing realized paper entries to backtest assumptions, then tiny live capital. 📄 `Research/05-...md` §4.6, §8
 
 ---
 
 ## Series Notes
 
-**Post order:** 1 → 2 → 3 → 4
-- Starts with the most intuitive & timeless (event-driven drift) → escalates to modern alt-data → machine learning → AI/LLM frontier
-- Each video ends teasing the next, creating a natural series flow
+**Post order:** 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9 → 10 → …
+- Research half starts with the most intuitive & timeless (event-driven drift) → modern alt-data → machine learning → AI/LLM frontier
+- Build half follows the pipeline in execution order, one stage per video
+- Each video ends teasing the next, creating a natural series flow. **The order is locked by the on-camera CTAs** — video N names video N+1's topic out loud, so reels can't be reshuffled after shooting.
 
 **Series arc:**
 - Videos 1–4: "Here's everything Wall Street does — old and new" (research phase)
-- Videos 5+: "Here's what I'm actually building into my bot and why" (build phase)
+- Videos 5–6: "Here's what I picked, and the pipeline" (pivot)
+- Videos 7+: "Here's me building each stage for real" (build phase)
 
 **Modern-vs-classic weighting per video:**
 - V1: classic edges that STILL run (anchors the series in proven techniques)
